@@ -155,9 +155,9 @@ function App() {
           <section className="mb-20">
             <div className="mb-8">
               <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
-                Profile Verification
-                <br />
-                <span className="text-gray-400">Tool</span>
+                Is This Person <br /><span className="text-blue-400">Real?</span>
+                
+             
               </h1>
               <p className="text-lg text-gray-300 max-w-3xl leading-relaxed">
                 A web application that helps verify if social media profiles are authentic or fake. 
@@ -206,11 +206,45 @@ function App() {
                 <div className="space-y-6">
                   <div className="border border-gray-700 p-6 rounded-lg">
                     <h3 className="font-bold mb-3 text-gray-200">Analysis Results</h3>
+                    <p className="text-xs text-yellow-400 mb-4">
+                      Disclaimer: This analysis is powered by machine learning models and may not be 100% accurate. Results should be interpreted as guidance only and not as definitive proof. Always use your own judgment and consider additional information when making decisions.
+                    </p>
                     <div className="text-gray-300">
                       {uploadResult ? (
-                        <pre className="text-xs bg-gray-900 p-2 rounded overflow-x-auto">
-                          {JSON.stringify(uploadResult, null, 2)}
-                        </pre>
+                        <div className="space-y-4">
+                          {/* Label Badge */}
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold
+                              ${uploadResult.label === "AI" ? "bg-red-700 text-white" : "bg-green-700 text-white"}`}>
+                              {uploadResult.label === "AI" ? "AI Generated" : "Real Human"}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              Confidence: {(uploadResult.confidence * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                          {/* Scores */}
+                          <div>
+                            <div className="mb-2 text-sm font-semibold">Scores:</div>
+                            {uploadResult.scores && Object.entries(uploadResult.scores).map(([key, value]) => (
+                              <div key={key} className="mb-2">
+                                <div className="flex justify-between">
+                                  <span className="capitalize">{key}</span>
+                                  <span>{(value * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="w-full bg-gray-800 rounded h-2 mt-1">
+                                  <div
+                                    className={
+                                      key === uploadResult.label
+                                        ? (key === "AI" ? "bg-red-600" : "bg-green-600")
+                                        : "bg-gray-500"
+                                    }
+                                    style={{ width: `${value * 100}%`, height: "100%", borderRadius: "0.25rem" }}
+                                  ></div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       ) : (
                         <span className="text-gray-500">
                           {isAnalyzing
