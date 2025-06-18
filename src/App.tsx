@@ -260,7 +260,7 @@ function App() {
           </section>
 
           {/* Name Search Section */}
-          <div className="mb-12">
+          <div className="mb-12 w-full sm:w-3/4">
             <h2 className="text-xl font-bold mb-4">Enter This Person's Name</h2>
             <div className="border border-gray-700 bg-gray-900 rounded-lg p-8">
               <input
