@@ -18,6 +18,24 @@ import {
   Wrench
 } from 'lucide-react';
 
+// Add this function at the top (outside App)
+async function analyzeImage(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch("https://youngjeck-aidetect.hf.space/analyze", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to analyze image");
+  }
+
+  const result = await response.json();
+  return result;
+}
+
 interface SearchResult {
   name: string;
   source: string;
@@ -31,6 +49,26 @@ function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadResult, setUploadResult] = useState<any>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // Update handleFileSelect to enable upload
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    setUploadResult(null);
+    setUploadError(null);
+    setIsAnalyzing(true);
+    createImagePreview(file);
+    try {
+      const data = await analyzeImage(file);
+      setUploadResult(data);
+    } catch (err) {
+      setUploadError("Something went wrong.");
+    }
+    setIsAnalyzing(false);
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -79,7 +117,7 @@ function App() {
     { name: 'Spring Boot', usage: 'GraphQL API framework and dependency injection' },
     { name: 'Python (FastAPI)', usage: 'Machine learning model serving and image processing' },
     { name: 'OpenAI', usage: 'Natural language processing and content analysis' },
-    { name: 'DeepFace', usage: 'Facial recognition and image comparison' },
+    { name: 'Hugging Face Model', usage: 'Facial recognition and image comparison' },
     { name: 'MySQL', usage: 'Primary database for user data and results' },
     { name: 'Redis', usage: 'Caching and session management' },
     { name: 'React', usage: 'Frontend user interface development' }
@@ -131,27 +169,58 @@ function App() {
               </p>
             </div>
 
-            {/* Upload Section - Disabled */}
+            {/* Upload Section - ENABLED */}
             <div className="mb-12">
               <h2 className="text-xl font-bold mb-4">Upload Profile Image</h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Upload Area - Disabled */}
+                {/* Upload Area */}
                 <div>
-                  <div className="border-2 border-dashed border-gray-600 bg-gray-900 opacity-50 rounded-lg p-8 text-center">
+                  <div className="border-2 border-dashed border-gray-600 bg-gray-900 rounded-lg p-8 text-center">
                     <div className="flex flex-col items-center space-y-4">
-                      <Wrench className="w-12 h-12 text-gray-500" />
-                      <p className="text-lg text-gray-500">Feature Enhancement in Progress</p>
-                      <p className="text-gray-600">I'm currently upgrading the image analysis capabilities with advanced AI models and enhanced accuracy</p>
+                      <Image className="w-12 h-12 text-gray-400" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="mb-4"
+                        disabled={isAnalyzing}
+                      />
+                      {imagePreview && (
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="max-h-40 rounded shadow mb-2"
+                        />
+                      )}
+                      {isAnalyzing && (
+                        <div className="flex items-center space-x-2 text-gray-400">
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Analyzing...</span>
+                        </div>
+                      )}
+                      {uploadError && (
+                        <div className="text-red-400">{uploadError}</div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                {/* Results Area - Placeholder */}
+                {/* Results Area */}
                 <div className="space-y-6">
-                  <div className="border border-gray-700 p-6 rounded-lg opacity-50">
-                    <h3 className="font-bold mb-3 text-gray-500">Analysis Results</h3>
-                    <div className="text-gray-600">
-                      Enhanced results with detailed confidence scores and multi-platform verification will appear here.
+                  <div className="border border-gray-700 p-6 rounded-lg">
+                    <h3 className="font-bold mb-3 text-gray-200">Analysis Results</h3>
+                    <div className="text-gray-300">
+                      {uploadResult ? (
+                        <pre className="text-xs bg-gray-900 p-2 rounded overflow-x-auto">
+                          {JSON.stringify(uploadResult, null, 2)}
+                        </pre>
+                      ) : (
+                        <span className="text-gray-500">
+                          {isAnalyzing
+                            ? "Analyzing image..."
+                            : "Upload an image to see results here."}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
