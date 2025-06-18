@@ -259,6 +259,24 @@ function App() {
             </div>
           </section>
 
+          {/* Name Search Section */}
+          <div className="mb-12">
+            <h2 className="text-xl font-bold mb-4">Enter This Person's Name</h2>
+            <div className="border border-gray-700 bg-gray-900 rounded-lg p-8">
+              <input
+                type="text"
+                placeholder="e.g. John Doe"
+                className="w-full px-4 py-2 rounded bg-black border border-gray-700 text-white mb-4 focus:outline-none focus:border-blue-400"
+                disabled
+              />
+              <p className="text-gray-300 text-sm">
+                I am currently upgrading the search for web and social media platforms for this person's name, 
+                scraping public data to help determine if the profile is authentic or potentially fake. 
+                This will include cross-referencing activity, connections, and other signals to provide a more comprehensive credibility score.
+              </p>
+            </div>
+          </div>
+
           {/* Tech Stack */}
           <section className="mb-20">
             <h2 className="text-2xl font-bold mb-8">Technologies Used</h2>
