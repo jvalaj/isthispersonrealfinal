@@ -89,9 +89,6 @@ function App() {
     // Disabled for feature upgrade
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Disabled for feature upgrade
-  };
 
   const createImagePreview = (file: File) => {
     const reader = new FileReader();
