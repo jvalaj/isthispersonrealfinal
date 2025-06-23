@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Terminal, 
-  Search, 
-  Database, 
-  Users, 
-  CheckCircle, 
-  AlertTriangle, 
-  Globe, 
+import React, { useState, useEffect } from "react";
+import {
+  Terminal,
+  Search,
+  Database,
+  Users,
+  CheckCircle,
+  AlertTriangle,
+  Globe,
   Code,
   Server,
   Cpu,
@@ -15,8 +15,8 @@ import {
   Upload,
   Image,
   Loader2,
-  Wrench
-} from 'lucide-react';
+  Wrench,
+} from "lucide-react";
 
 // Add this function at the top (outside App)
 async function analyzeImage(file: File) {
@@ -72,7 +72,7 @@ function App() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setVerificationCount(prev => prev + Math.floor(Math.random() * 2) + 1);
+      setVerificationCount((prev) => prev + Math.floor(Math.random() * 2) + 1);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -88,7 +88,6 @@ function App() {
     e.stopPropagation();
     // Disabled for feature upgrade
   };
-
 
   const createImagePreview = (file: File) => {
     const reader = new FileReader();
@@ -110,31 +109,46 @@ function App() {
   };
 
   const techStack = [
-    { name: 'Java', usage: 'Backend API development and business logic' },
-    { name: 'Spring Boot', usage: 'GraphQL API framework and dependency injection' },
-    { name: 'Python (FastAPI)', usage: 'Machine learning model serving and image processing' },
-    { name: 'OpenAI', usage: 'Natural language processing and content analysis' },
-    { name: 'Hugging Face Model', usage: 'Facial recognition and image comparison' },
-    { name: 'MySQL', usage: 'Primary database for user data and results' },
-    { name: 'Redis', usage: 'Caching and session management' },
-    { name: 'React', usage: 'Frontend user interface development' }
+    { name: "Java", usage: "Backend API development and business logic" },
+    {
+      name: "Spring Boot",
+      usage: "GraphQL API framework and dependency injection",
+    },
+    {
+      name: "Python (FastAPI)",
+      usage: "Machine learning model serving and image processing",
+    },
+    {
+      name: "OpenAI",
+      usage: "Natural language processing and content analysis",
+    },
+    {
+      name: "Hugging Face Model",
+      usage: "Facial recognition and image comparison",
+    },
+    { name: "MySQL", usage: "Primary database for user data and results" },
+    { name: "Redis", usage: "Caching and session management" },
+    { name: "React", usage: "Frontend UI development" },
   ];
 
   const platforms = [
-    { name: 'LinkedIn', verified: 42, flagged: 8, accuracy: 78.2 },
-    { name: 'Twitter', verified: 29, flagged: 11, accuracy: 72.6 },
-    { name: 'Instagram', verified: 36, flagged: 9, accuracy: 80.1 },
-    { name: 'Facebook', verified: 18, flagged: 6, accuracy: 75.8 }
+    { name: "LinkedIn", verified: 42, flagged: 8, accuracy: 78.2 },
+    { name: "Twitter", verified: 29, flagged: 11, accuracy: 72.6 },
+    { name: "Instagram", verified: 36, flagged: 9, accuracy: 80.1 },
+    { name: "Facebook", verified: 18, flagged: 6, accuracy: 75.8 },
   ];
 
   return (
     <div className="min-h-screen bg-black text-white font-mono">
       {/* Grid Background */}
       <div className="fixed inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '20px 20px'
-        }}></div>
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: "20px 20px",
+          }}
+        ></div>
       </div>
 
       {/* Header */}
@@ -142,7 +156,9 @@ function App() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Terminal className="w-6 h-6" />
-            <span className="text-lg font-bold tracking-wider">ISTHISPERSONREAL</span>
+            <span className="text-lg font-bold tracking-wider">
+              ISTHISPERSONREAL
+            </span>
           </div>
         </div>
       </header>
@@ -150,19 +166,18 @@ function App() {
       {/* Main Content */}
       <main className="relative px-6 py-12">
         <div className="max-w-7xl mx-auto">
-          
           {/* Hero */}
           <section className="mb-20">
             <div className="mb-8">
               <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
-                Is This Person <br /><span className="text-blue-400">Real?</span>
-                
-             
+                Is This Person <br />
+                <span className="text-blue-400">Real?</span>
               </h1>
               <p className="text-lg text-gray-300 max-w-3xl leading-relaxed">
-                A web application that helps verify if social media profiles are authentic or fake. 
-                Uses computer vision to analyze profile pictures, web scraping to gather data across platforms, 
-                and machine learning to score credibility.
+                A web application that helps verify if social media profiles are
+                authentic or fake. Uses computer vision to analyze profile
+                pictures, web scraping to gather data across platforms, and
+                machine learning to score credibility.
               </p>
             </div>
 
@@ -205,44 +220,70 @@ function App() {
                 {/* Results Area */}
                 <div className="space-y-6">
                   <div className="border border-gray-700 p-6 rounded-lg">
-                    <h3 className="font-bold mb-3 text-gray-200">Analysis Results</h3>
+                    <h3 className="font-bold mb-3 text-gray-200">
+                      Analysis Results
+                    </h3>
                     <p className="text-xs text-yellow-400 mb-4">
-                      Disclaimer: This analysis is powered by machine learning models and may not be 100% accurate. Results should be interpreted as guidance only and not as definitive proof. Always use your own judgment and consider additional information when making decisions.
+                      Disclaimer: This analysis is powered by machine learning
+                      models and may not be 100% accurate. Results should be
+                      interpreted as guidance only and not as definitive proof.
+                      Always use your own judgment and consider additional
+                      information when making decisions.
                     </p>
                     <div className="text-gray-300">
                       {uploadResult ? (
                         <div className="space-y-4">
                           {/* Label Badge */}
                           <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold
-                              ${uploadResult.label === "AI" ? "bg-red-700 text-white" : "bg-green-700 text-white"}`}>
-                              {uploadResult.label === "AI" ? "AI Generated" : "Real Human"}
+                            <span
+                              className={`px-3 py-1 rounded-full text-xs font-bold
+                              ${
+                                uploadResult.label === "AI"
+                                  ? "bg-red-700 text-white"
+                                  : "bg-green-700 text-white"
+                              }`}
+                            >
+                              {uploadResult.label === "AI"
+                                ? "AI Generated"
+                                : "Real Human"}
                             </span>
                             <span className="text-xs text-gray-400">
-                              Confidence: {(uploadResult.confidence * 100).toFixed(1)}%
+                              Confidence:{" "}
+                              {(uploadResult.confidence * 100).toFixed(1)}%
                             </span>
                           </div>
                           {/* Scores */}
                           <div>
-                            <div className="mb-2 text-sm font-semibold">Scores:</div>
-                            {uploadResult.scores && Object.entries(uploadResult.scores).map(([key, value]) => (
-                              <div key={key} className="mb-2">
-                                <div className="flex justify-between">
-                                  <span className="capitalize">{key}</span>
-                                  <span>{(value * 100).toFixed(1)}%</span>
-                                </div>
-                                <div className="w-full bg-gray-800 rounded h-2 mt-1">
-                                  <div
-                                    className={
-                                      key === uploadResult.label
-                                        ? (key === "AI" ? "bg-red-600" : "bg-green-600")
-                                        : "bg-gray-500"
-                                    }
-                                    style={{ width: `${value * 100}%`, height: "100%", borderRadius: "0.25rem" }}
-                                  ></div>
-                                </div>
-                              </div>
-                            ))}
+                            <div className="mb-2 text-sm font-semibold">
+                              Scores:
+                            </div>
+                            {uploadResult.scores &&
+                              Object.entries(uploadResult.scores).map(
+                                ([key, value]) => (
+                                  <div key={key} className="mb-2">
+                                    <div className="flex justify-between">
+                                      <span className="capitalize">{key}</span>
+                                      <span>{(value * 100).toFixed(1)}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-800 rounded h-2 mt-1">
+                                      <div
+                                        className={
+                                          key === uploadResult.label
+                                            ? key === "AI"
+                                              ? "bg-red-600"
+                                              : "bg-green-600"
+                                            : "bg-gray-500"
+                                        }
+                                        style={{
+                                          width: `${value * 100}%`,
+                                          height: "100%",
+                                          borderRadius: "0.25rem",
+                                        }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                )
+                              )}
                           </div>
                         </div>
                       ) : (
@@ -270,9 +311,11 @@ function App() {
                 disabled
               />
               <p className="text-gray-500 text-sm">
-                I am currently upgrading the search for web and social media platforms for this person's name, 
-                scraping public data to help determine if the profile is authentic or potentially fake. 
-                This will include cross-referencing activity, connections, and other signals to provide a more comprehensive credibility score.
+                I am currently upgrading the search for web and social media
+                platforms for this person's name, scraping public data to help
+                determine if the profile is authentic or potentially fake. This
+                will include cross-referencing activity, connections, and other
+                signals to provide a more comprehensive credibility score.
               </p>
             </div>
           </div>
@@ -282,7 +325,10 @@ function App() {
             <h2 className="text-2xl font-bold mb-8">Technologies Used</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {techStack.map((tech, index) => (
-                <div key={index} className="border border-gray-700 p-6 hover:border-white transition-colors">
+                <div
+                  key={index}
+                  className="border border-gray-700 p-6 hover:border-white transition-colors"
+                >
                   <div className="flex items-center mb-3">
                     <Code className="w-5 h-5 mr-3" />
                     <h3 className="font-bold">{tech.name}</h3>
@@ -298,7 +344,10 @@ function App() {
             <h2 className="text-2xl font-bold mb-8">Platforms Analysed</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {platforms.map((platform, index) => (
-                <div key={index} className="border border-gray-700 p-6 hover:border-white transition-colors">
+                <div
+                  key={index}
+                  className="border border-gray-700 p-6 hover:border-white transition-colors"
+                >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold">{platform.name}</h3>
                     <Globe className="w-5 h-5" />
@@ -326,7 +375,9 @@ function App() {
           <section className="mb-20">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="border border-gray-700 p-6">
-                <div className="text-2xl font-bold mb-1">{verificationCount.toLocaleString()}</div>
+                <div className="text-2xl font-bold mb-1">
+                  {verificationCount.toLocaleString()}
+                </div>
                 <div className="text-gray-400 text-sm">Profiles Processed</div>
               </div>
               <div className="border border-gray-700 p-6">
@@ -339,7 +390,9 @@ function App() {
               </div>
               <div className="border border-gray-700 p-6">
                 <div className="text-2xl font-bold mb-1">3.2s</div>
-                <div className="text-gray-400 text-sm">Average Processing Time</div>
+                <div className="text-gray-400 text-sm">
+                  Average Processing Time
+                </div>
               </div>
             </div>
           </section>
@@ -352,8 +405,9 @@ function App() {
                 <Search className="w-8 h-8 mb-4" />
                 <h3 className="text-xl font-bold mb-4">Image Analysis</h3>
                 <p className="text-gray-300 mb-4">
-                  Uses DeepFace to analyze profile pictures for signs of manipulation or AI generation. 
-                  Performs reverse image searches and checks for duplicate usage across platforms.
+                  Uses DeepFace to analyze profile pictures for signs of
+                  manipulation or AI generation. Performs reverse image searches
+                  and checks for duplicate usage across platforms.
                 </p>
                 <div className="text-sm text-gray-400">
                   <div>• Reverse image search</div>
@@ -366,8 +420,9 @@ function App() {
                 <Database className="w-8 h-8 mb-4" />
                 <h3 className="text-xl font-bold mb-4">Data Collection</h3>
                 <p className="text-gray-300 mb-4">
-                  Scrapes publicly available information from social media platforms to build 
-                  a comprehensive profile. Looks for inconsistencies in posting patterns and connections.
+                  Scrapes publicly available information from social media
+                  platforms to build a comprehensive profile. Looks for
+                  inconsistencies in posting patterns and connections.
                 </p>
                 <div className="text-sm text-gray-400">
                   <div>• Multi-platform data gathering</div>
@@ -380,8 +435,9 @@ function App() {
                 <Cpu className="w-8 h-8 mb-4" />
                 <h3 className="text-xl font-bold mb-4">Credibility Scoring</h3>
                 <p className="text-gray-300 mb-4">
-                  Combines all collected data points using OpenAI and machine learning models to generate 
-                  a credibility score. Trained on manually verified fake and real profiles.
+                  Combines all collected data points using OpenAI and machine
+                  learning models to generate a credibility score. Trained on
+                  manually verified fake and real profiles.
                 </p>
                 <div className="text-sm text-gray-400">
                   <div>• ML-based scoring algorithm</div>
