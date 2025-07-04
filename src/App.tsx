@@ -457,9 +457,7 @@ function App() {
             <Terminal className="w-5 h-5" />
             <span className="font-bold tracking-wider">ISTHISPERSONREAL</span>
           </div>
-          <div className="text-gray-400 text-sm text-center md:text-right">
-            <p>Profile Verification System</p>
-          </div>
+          
         </div>
       </footer>
     </div>
