@@ -14,6 +14,7 @@ import {
   GitBranch,
   Upload,
   Image,
+  AudioWaveform ,
   Loader2,
   Wrench,
 } from "lucide-react";
@@ -83,11 +84,6 @@ function App() {
     // Disabled for feature upgrade
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Disabled for feature upgrade
-  };
 
   const createImagePreview = (file: File) => {
     const reader = new FileReader();
@@ -97,9 +93,7 @@ function App() {
     reader.readAsDataURL(file);
   };
 
-  const performReverseImageSearch = async () => {
-    // Disabled for feature upgrade
-  };
+
 
   const resetAnalysis = () => {
     setSelectedFile(null);
@@ -132,10 +126,10 @@ function App() {
   ];
 
   const platforms = [
-    { name: "LinkedIn", verified: 42, flagged: 8, accuracy: 78.2 },
-    { name: "Twitter", verified: 29, flagged: 11, accuracy: 72.6 },
-    { name: "Instagram", verified: 36, flagged: 9, accuracy: 80.1 },
-    { name: "Facebook", verified: 18, flagged: 6, accuracy: 75.8 },
+    { name: "LinkedIn", verified: 5, flagged: 2, accuracy: 78.2 },
+    { name: "X", verified: 7, flagged: 1, accuracy: 72.6 },
+    { name: "Instagram", verified: 13, flagged: 5, accuracy: 80.1 },
+    { name: "Facebook", verified: 8, flagged: 2, accuracy: 75.8 },
   ];
 
   return (
@@ -160,6 +154,10 @@ function App() {
               ISTHISPERSONREAL
             </span>
           </div>
+          <div className="flex items-center space-x-3 mb-4 md:mb-0">
+          <AudioWaveform  className="w-5 h-5"/>
+            <span className="font-bold tracking-wider">built by <u><a href="https://github.com/jvalaj">@jvalaj</a></u></span>
+          </div>
         </div>
       </header>
 
@@ -175,7 +173,7 @@ function App() {
               </h1>
               <p className="text-lg text-gray-300 max-w-3xl leading-relaxed">
                 A web application that helps verify if social media profiles are
-                authentic or fake. Uses computer vision to analyze profile
+                authentic or fake. Uses an ML model to analyze profile
                 pictures, web scraping to gather data across platforms, and
                 machine learning to score credibility.
               </p>
@@ -313,9 +311,7 @@ function App() {
               <p className="text-gray-500 text-sm">
                 I am currently upgrading the search for web and social media
                 platforms for this person's name, scraping public data to help
-                determine if the profile is authentic or potentially fake. This
-                will include cross-referencing activity, connections, and other
-                signals to provide a more comprehensive credibility score.
+                determine if the profile is authentic or potentially fake.
               </p>
             </div>
           </div>
@@ -376,7 +372,7 @@ function App() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="border border-gray-700 p-6">
                 <div className="text-2xl font-bold mb-1">
-                  {verificationCount.toLocaleString()}
+                  27
                 </div>
                 <div className="text-gray-400 text-sm">Profiles Processed</div>
               </div>
@@ -389,7 +385,7 @@ function App() {
                 <div className="text-gray-400 text-sm">Platforms Supported</div>
               </div>
               <div className="border border-gray-700 p-6">
-                <div className="text-2xl font-bold mb-1">3.2s</div>
+                <div className="text-2xl font-bold mb-1">{'<'}10s</div>
                 <div className="text-gray-400 text-sm">
                   Average Processing Time
                 </div>
@@ -406,11 +402,9 @@ function App() {
                 <h3 className="text-xl font-bold mb-4">Image Analysis</h3>
                 <p className="text-gray-300 mb-4">
                   Uses DeepFace to analyze profile pictures for signs of
-                  manipulation or AI generation. Performs reverse image searches
-                  and checks for duplicate usage across platforms.
+                  manipulation or AI generation.
                 </p>
                 <div className="text-sm text-gray-400">
-                  <div>• Reverse image search</div>
                   <div>• Face detection algorithms</div>
                   <div>• Image metadata analysis</div>
                 </div>
@@ -427,7 +421,6 @@ function App() {
                 <div className="text-sm text-gray-400">
                   <div>• Multi-platform data gathering</div>
                   <div>• Activity pattern analysis</div>
-                  <div>• Network connection mapping</div>
                 </div>
               </div>
 
@@ -442,7 +435,6 @@ function App() {
                 <div className="text-sm text-gray-400">
                   <div>• ML-based scoring algorithm</div>
                   <div>• Behavioral pattern recognition</div>
-                  <div>• Confidence interval reporting</div>
                 </div>
               </div>
             </div>
@@ -457,7 +449,10 @@ function App() {
             <Terminal className="w-5 h-5" />
             <span className="font-bold tracking-wider">ISTHISPERSONREAL</span>
           </div>
-          
+          <div className="flex items-center space-x-3 mb-4 md:mb-0">
+          <AudioWaveform  className="w-5 h-5"/>
+            <span className="font-bold tracking-wider">built by <u><a href="https://github.com/jvalaj">@jvalaj</a></u></span>
+          </div>
         </div>
       </footer>
     </div>
