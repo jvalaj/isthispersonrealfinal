@@ -18,6 +18,7 @@ import {
   Loader2,
   Wrench,
 } from "lucide-react";
+import { GRAPHQL_ENDPOINT } from "./config";
 
 // Add this function at the top (outside App)
 async function analyzeImage(file: File) {
@@ -43,6 +44,16 @@ interface SearchResult {
   confidence: number;
 }
 
+interface Person {
+  id: string;
+  name: string;
+  platform: string;
+  profileUrl?: string;
+  confidence: number;
+  isVerified: boolean;
+  lastSeen?: string;
+}
+
 function App() {
   const [verificationCount, setVerificationCount] = useState(247);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -52,6 +63,10 @@ function App() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [searchName, setSearchName] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<Person[]>([]);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Update handleFileSelect to enable upload
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +115,52 @@ function App() {
     setImagePreview(null);
     setSearchResult(null);
     setIsAnalyzing(false);
+  };
+
+  const searchPerson = async (name: string) => {
+    if (!name.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+
+    try {
+      const query = `
+        query {
+          searchPerson(name: "${name.trim()}") {
+            id
+            name
+            platform
+            profileUrl
+            confidence
+            isVerified
+            lastSeen
+          }
+        }
+      `;
+
+      const response = await fetch(GRAPHQL_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to search");
+      }
+
+      const data = await response.json();
+      setSearchResults(data.data.searchPerson || []);
+    } catch (error) {
+      setSearchError("Failed to search. Please try again.");
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const techStack = [
@@ -261,7 +322,7 @@ function App() {
                                   <div key={key} className="mb-2">
                                     <div className="flex justify-between">
                                       <span className="capitalize">{key}</span>
-                                      <span>{(value * 100).toFixed(1)}%</span>
+                                      <span>{((value as number) * 100).toFixed(1)}%</span>
                                     </div>
                                     <div className="w-full bg-gray-800 rounded h-2 mt-1">
                                       <div
@@ -273,7 +334,7 @@ function App() {
                                             : "bg-gray-500"
                                         }
                                         style={{
-                                          width: `${value * 100}%`,
+                                          width: `${(value as number) * 100}%`,
                                           height: "100%",
                                           borderRadius: "0.25rem",
                                         }}
@@ -299,19 +360,85 @@ function App() {
           </section>
 
           {/* Name Search Section */}
-          <div className="mb-12 w-full sm:w-1/2">
+          <div className="mb-12 w-full">
             <h2 className="text-xl font-bold mb-4">Enter Full Name</h2>
             <div className="border border-gray-700 bg-gray-900 rounded-lg p-8">
-              <input
-                type="text"
-                placeholder="disabled for now"
-                className="w-full px-4 py-2 rounded bg-black border border-gray-700 text-white mb-4 focus:outline-none focus:border-red-400"
-                disabled
-              />
-              <p className="text-gray-500 text-sm">
-                I am currently upgrading the search for web and social media
-                platforms for this person's name, scraping public data to help
-                determine if the profile is authentic or potentially fake.
+              <div className="flex gap-4 mb-4">
+                <input
+                  type="text"
+                  placeholder="Enter a name to search..."
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  className="flex-1 px-4 py-2 rounded bg-black border border-gray-700 text-white focus:outline-none focus:border-blue-400"
+                />
+                <button
+                  onClick={() => searchPerson(searchName)}
+                  disabled={isSearching || !searchName.trim()}
+                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Searching...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4" />
+                      Search
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              {searchError && (
+                <div className="text-red-400 mb-4">{searchError}</div>
+              )}
+              
+              {searchResults.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-200">Search Results ({searchResults.length})</h3>
+                  <div className="grid gap-4">
+                    {searchResults.map((person) => (
+                      <div key={person.id} className="border border-gray-600 p-4 rounded">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-bold text-white">{person.name}</h4>
+                            <p className="text-gray-400 text-sm">{person.platform}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-bold ${
+                                person.isVerified
+                                  ? "bg-green-700 text-white"
+                                  : "bg-red-700 text-white"
+                              }`}
+                            >
+                              {person.isVerified ? "Verified" : "Unverified"}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {(person.confidence * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        {person.profileUrl && (
+                          <a
+                            href={person.profileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:text-blue-300 text-sm"
+                          >
+                            View Profile →
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <p className="text-gray-500 text-sm mt-4">
+                Search for a person's name to find their profiles across social media platforms.
+                Results show verification status and confidence scores.
               </p>
             </div>
           </div>
