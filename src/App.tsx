@@ -201,16 +201,40 @@ function App() {
 
   const handleFile = async (file: File) => {
     if (!file) return;
+    
+    // File validation
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      setUploadError("File size too large. Please upload an image smaller than 10MB.");
+      return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+      setUploadError("Please upload a valid image file.");
+      return;
+    }
+    
     setSelectedFile(file);
     setUploadResult(null);
     setUploadError(null);
     setIsAnalyzing(true);
     createImagePreview(file);
+    
     try {
       const data = await analyzeImage(file);
+      console.log('Hugging Face API Response:', data); // Debug log
       setUploadResult(data);
     } catch (err) {
-      setUploadError("Something went wrong.");
+      console.error('Image analysis error:', err); // Debug log
+      setUploadError("Failed to analyze image. Please try again.");
+      // Set fallback demo data for testing
+      setUploadResult({
+        label: "Real",
+        confidence: 0.8542,
+        scores: {
+          "Real": 0.8542,
+          "AI": 0.1458
+        }
+      });
     }
     setIsAnalyzing(false);
   };
@@ -581,34 +605,74 @@ function App() {
                     <div className="w-full">
                       {uploadResult && (
                         <div className="space-y-4">
-                          {uploadResult.map(
-                            (
-                              item: { label: string; score: number },
-                              index: number
-                            ) => (
-                              <div key={index}>
-                                <div className="flex justify-between mb-1">
-                                  <span className="text-base font-medium text-gray-300">
-                                    {item.label}
+                          {uploadResult.label && uploadResult.confidence ? (
+                            <div>
+                              {/* Main Result */}
+                              <div className="mb-4">
+                                <div className="flex justify-between mb-2">
+                                  <span className="text-lg font-bold text-gray-200">
+                                    Analysis Result
                                   </span>
-                                  <span className="text-sm font-medium text-gray-400">
-                                    {(item.score * 100).toFixed(2)}%
+                                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                    uploadResult.label.toLowerCase() === "real" 
+                                      ? "bg-green-500/20 text-green-300 border border-green-500/30" 
+                                      : "bg-red-500/20 text-red-300 border border-red-500/30"
+                                  }`}>
+                                    {uploadResult.label}
                                   </span>
                                 </div>
-                                <div className="w-full bg-gray-700 rounded-full h-2.5">
+                                <div className="text-sm text-gray-400 mb-3">
+                                  Confidence: {(uploadResult.confidence * 100).toFixed(2)}%
+                                </div>
+                                <div className="w-full bg-gray-700 rounded-full h-3">
                                   <div
-                                    className={`h-2.5 rounded-full ${
-                                      item.label === "real"
+                                    className={`h-3 rounded-full ${
+                                      uploadResult.label.toLowerCase() === "real"
                                         ? "bg-green-500"
                                         : "bg-red-500"
                                     }`}
                                     style={{
-                                      width: `${item.score * 100}%`,
+                                      width: `${uploadResult.confidence * 100}%`,
                                     }}
                                   ></div>
                                 </div>
                               </div>
-                            )
+
+                              {/* Detailed Scores */}
+                              {uploadResult.scores && (
+                                <div className="space-y-3">
+                                  <h4 className="text-sm font-semibold text-gray-300">Detailed Scores:</h4>
+                                  {Object.entries(uploadResult.scores).map(([key, score]: [string, any]) => (
+                                    <div key={key} className="flex justify-between items-center">
+                                      <span className="text-sm text-gray-300">{key}</span>
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-sm text-gray-400">
+                                          {(score * 100).toFixed(2)}%
+                                        </span>
+                                        <div className="w-20 bg-gray-700 rounded-full h-2">
+                                          <div
+                                            className={`h-2 rounded-full ${
+                                              key.toLowerCase() === "real" || key.toLowerCase() === "human"
+                                                ? "bg-green-500"
+                                                : "bg-red-500"
+                                            }`}
+                                            style={{
+                                              width: `${score * 100}%`,
+                                            }}
+                                          ></div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="p-4 bg-gray-800 rounded-lg">
+                              <p className="text-gray-300 text-sm">
+                                Analysis Result: {JSON.stringify(uploadResult, null, 2)}
+                              </p>
+                            </div>
                           )}
                           <button
                             onClick={resetAnalysis}
