@@ -19,7 +19,7 @@ import { searchWithGemini } from "./gemini";
 async function analyzeImage(file: File) {
   const formData = new FormData();
   formData.append("file", file);
-
+  
   const response = await fetch("https://youngjeck-aidetect.hf.space/analyze", {
     method: "POST",
     body: formData,
@@ -70,7 +70,7 @@ const GeminiLoadingAnimation = () => {
       ) : (
         <div className="space-y-2">
           <div className="text-sm text-gray-400">
-            You will find out in...
+            You will find out in..
           </div>
           <div className="text-3xl font-bold text-blue-400 animate-bounce">
             {countdown > 0 ? countdown : "🔍"}
