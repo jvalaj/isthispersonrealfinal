@@ -84,9 +84,6 @@ const GeminiLoadingAnimation = () => {
 
 // Person Results Card Component
 const PersonResultsCard = ({ result }: { result: string }) => {
-  // Debug: log the raw result
-  console.log('Raw Gemini result:', result);
-  
   // Parse the result to extract structured information
   const parseResult = (text: string) => {
     const lines = text.split('\n').filter(line => line.trim());
@@ -114,9 +111,6 @@ const PersonResultsCard = ({ result }: { result: string }) => {
   };
 
   const data = parseResult(result);
-  
-  // Debug: log the parsed data
-  console.log('Parsed data:', data);
 
   return (
     <div className="mt-6 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border border-gray-700 rounded-xl p-6 backdrop-blur-sm shadow-xl">
@@ -190,7 +184,6 @@ interface Person {
 }
 
 function App() {
-  const [verificationCount, setVerificationCount] = useState(247);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -229,13 +222,6 @@ function App() {
       handleFile(file);
     }
   };
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVerificationCount((prev) => prev + Math.floor(Math.random() * 2) + 1);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
