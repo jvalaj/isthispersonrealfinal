@@ -2,15 +2,12 @@ import React, { useState, useEffect } from "react";
 import {
   Terminal,
   Search,
-  Database,
   CheckCircle,
   Globe,
-  Code,
-  Cpu,
   Activity,
   Upload,
   Image,
-  AudioWaveform ,
+  AudioWaveform,
   Loader2,
 } from "lucide-react";
 import { GRAPHQL_ENDPOINT } from "./config";
@@ -347,38 +344,15 @@ function App() {
     }
   };
 
-  const techStack = [
-    { name: "Java", usage: "Backend API development and business logic" },
-    {
-      name: "Spring Boot",
-      usage: "GraphQL API framework and dependency injection",
-    },
-    {
-      name: "Python (FastAPI)",
-      usage: "Machine learning model serving and image processing",
-    },
-    {
-      name: "OpenAI",
-      usage: "Natural language processing and content analysis",
-    },
-    {
-      name: "Hugging Face Model",
-      usage: "Facial recognition and image comparison",
-    },
-    { name: "MySQL", usage: "Primary database for user data and results" },
-    { name: "Redis", usage: "Caching and session management" },
-    { name: "React", usage: "Frontend UI development" },
-  ];
-
-  const platforms = [
-    { name: "LinkedIn", verified: 5, flagged: 2, accuracy: 78.2 },
-    { name: "X", verified: 7, flagged: 1, accuracy: 72.6 },
-    { name: "Instagram", verified: 13, flagged: 5, accuracy: 80.1 },
-    { name: "Facebook", verified: 8, flagged: 2, accuracy: 75.8 },
-  ];
+  // Handle key press for search input fields
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchName.trim()) {
+      searchPerson(searchName);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-black text-white font-mono">
+    <div className="min-h-screen bg-black text-white font-mono flex flex-col overflow-x-hidden">
       {/* Grid Background */}
       <div className="fixed inset-0 opacity-5">
         <div
@@ -391,61 +365,59 @@ function App() {
       </div>
 
       {/* Header */}
-      <header className="relative z-50 px-6 py-4 border-b border-gray-800">
+      <header className="relative z-50 px-4 py-3 border-b border-gray-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Terminal className="w-6 h-6" />
-            <span className="text-lg font-bold tracking-wider">
+          <div className="flex items-center space-x-2">
+            <Terminal className="w-5 h-5" />
+            <span className="text-base font-bold tracking-wider">
               ISTHISPERSONREAL
             </span>
           </div>
-          <div className="flex items-center space-x-3 mb-4 md:mb-0">
-          <AudioWaveform  className="w-5 h-5"/>
-            <span className="font-bold tracking-wider">built by <u><a href="https://github.com/jvalaj">@jvalaj</a></u></span>
+          <div className="flex items-center space-x-2">
+            <AudioWaveform className="w-4 h-4"/>
+            <span className="font-bold tracking-wider text-sm">built by <u><a href="https://github.com/jvalaj">@jvalaj</a></u></span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Hero Section */}
-        <section className="text-center mb-24">
+      <main className="max-w-7xl mx-auto px-6 py-6 flex-grow flex flex-col">
+        {/* Hero Section - reducing size to fit screen better */}
+        <section className="text-center mb-8">
           <div className="relative inline-block">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter relative z-10">
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter relative z-10">
               Is This Person <br />
-              <span className="text-blue-400 mb-3 ">Real?</span>
+              <span className="text-blue-400">Real?</span>
             </h1>
-                  <br />
-            <p className="mt-4 text-xl text-gray-300 relative z-10">
+            <p className="mt-3 text-lg text-gray-300 relative z-10">
               Ever wondered if that person you see online is real..
             </p>
-            <p className="text-gray-400 mt-2 text-xs mx-auto relative z-10">
+            <p className="text-gray-400 mt-1 text-xs mx-auto relative z-10">
               [We search the web for traces of their existence and tell you what we found.]
-              <br />
-            
             </p>
           </div>
         </section>
 
-        <div className="flex flex-col lg:flex-row lg:space-x-8 mb-24">
+        <div className="flex flex-col lg:flex-row lg:space-x-8 flex-grow">
           {/* Search Section */}
-          <section id="search" className="w-full lg:w-1/2">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8 backdrop-blur-sm">
-              <div className="flex items-center space-x-3 mb-4">
+          <section id="search" className="w-full lg:w-1/2 flex flex-col">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 backdrop-blur-sm flex-grow flex flex-col h-full">
+              <div className="flex items-center space-x-3 mb-3">
                 <Search className="w-6 h-6 text-blue-400" />
-                <h2 className="text-2xl font-bold tracking-wider">
+                <h2 className="text-xl font-bold tracking-wider">
                   Search by Name
                 </h2>
               </div>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-400 mb-4 text-sm">
                 Enter a name to search for public records and social media
                 presence.
               </p>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex space-x-4">
                   <input
                     type="text"
                     value={searchName}
                     onChange={(e) => setSearchName(e.target.value)}
+                    onKeyDown={handleKeyPress}
                     placeholder="Enter a full name..."
                     className="w-full max-w-md bg-gray-800 border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -467,6 +439,7 @@ function App() {
                     type="text"
                     value={searchContext}
                     onChange={(e) => setSearchContext(e.target.value)}
+                    onKeyDown={handleKeyPress}
                     placeholder="Why are you looking for this person? (optional context)"
                     className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
@@ -477,8 +450,8 @@ function App() {
                 <p className="text-red-400 mt-4">{searchError}</p>
               )}
 
-              {/* Fixed height container for search results */}
-              <div className="mt-6 min-h-[400px] max-h-[400px] overflow-y-auto">
+              {/* Fixed height scrollable container for search results */}
+              <div className="mt-4 flex-grow overflow-y-auto min-h-[400px]">
                 {searchResults.length > 0 && (
                   <div>
                     <h3 className="text-xl font-bold mb-4">Search Results</h3>
@@ -543,20 +516,20 @@ function App() {
           </section>
 
           {/* Image Analysis Section */}
-          <section id="image-analysis" className="w-full lg:w-1/2 mt-8 lg:mt-0">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8 backdrop-blur-sm">
-              <div className="flex items-center space-x-3 mb-4">
+          <section id="image-analysis" className="w-full lg:w-1/2 mt-6 lg:mt-0 flex flex-col">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 backdrop-blur-sm flex-grow flex flex-col h-full">
+              <div className="flex items-center space-x-3 mb-3">
                 <Image className="w-6 h-6 text-purple-400" />
-                <h2 className="text-2xl font-bold tracking-wider">
+                <h2 className="text-xl font-bold tracking-wider">
                   Analyze by Image
                 </h2>
               </div>
-              <p className="text-gray-400 mb-6">
+              <p className="text-gray-400 mb-4 text-sm">
                 Upload an image to detect if it was generated by AI.
               </p>
 
               <div
-                className={`relative border-2 border-dashed border-gray-600 rounded-lg p-10 text-center cursor-pointer hover:border-purple-400 transition-colors ${
+                className={`relative border-2 border-dashed border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-purple-400 transition-colors ${
                   dragActive ? "border-purple-400 bg-gray-800/50" : ""
                 }`}
                 onDragEnter={handleDrag}
@@ -570,6 +543,7 @@ function App() {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   onChange={handleFileSelect}
                   accept="image/*"
+                  aria-label="Upload an image for analysis"
                 />
                 <Upload className="w-8 h-8 mx-auto mb-4 text-gray-500" />
                 <label htmlFor="file-upload" className="text-purple-400">
@@ -581,7 +555,7 @@ function App() {
               </div>
 
               {isAnalyzing && (
-                <div className="mt-8 text-center">
+                <div className="mt-6 text-center">
                   <Loader2 className="animate-spin inline-block w-8 h-8" />
                   <p>Analyzing image...</p>
                 </div>
@@ -591,241 +565,118 @@ function App() {
                 <p className="text-red-400 mt-4">{uploadError}</p>
               )}
 
-              {imagePreview && (
-                <div className="mt-8">
-                  <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
-                  <div className="space-y-4">
-                    <div className="w-full">
-                      <img
-                        src={imagePreview}
-                        alt="Uploaded preview"
-                        className="rounded-lg max-h-60 w-full object-cover"
-                      />
-                    </div>
-                    <div className="w-full">
-                      {uploadResult && (
-                        <div className="space-y-4">
-                          {uploadResult.label && uploadResult.confidence ? (
-                            <div>
-                              {/* Main Result */}
-                              <div className="mb-4">
-                                <div className="flex justify-between mb-2">
-                                  <span className="text-lg font-bold text-gray-200">
-                                    Analysis Result
-                                  </span>
-                                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                                    uploadResult.label.toLowerCase() === "real" 
-                                      ? "bg-green-500/20 text-green-300 border border-green-500/30" 
-                                      : "bg-red-500/20 text-red-300 border border-red-500/30"
-                                  }`}>
-                                    {uploadResult.label}
-                                  </span>
+              {/* Fixed height scrollable container for image results */}
+              <div className={`flex-grow overflow-y-auto ${imagePreview ? 'mt-4' : 'mt-0'}`}>
+                {imagePreview && (
+                  <div>
+                    <h3 className="text-xl font-bold mb-3">Analysis Result</h3>
+                    <div className="space-y-4">
+                      <div className="w-full">
+                        <img
+                          src={imagePreview}
+                          alt="Uploaded preview"
+                          className="rounded-lg max-h-60 w-full object-cover"
+                        />
+                      </div>
+                      <div className="w-full">
+                        {uploadResult && (
+                          <div className="space-y-4">
+                            {uploadResult.label && uploadResult.confidence ? (
+                              <div>
+                                {/* Main Result */}
+                                <div className="mb-4">
+                                  <div className="flex justify-between mb-2">
+                                    <span className="text-lg font-bold text-gray-200">
+                                      Analysis Result
+                                    </span>
+                                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                                      uploadResult.label.toLowerCase() === "real" 
+                                        ? "bg-green-500/20 text-green-300 border border-green-500/30" 
+                                        : "bg-red-500/20 text-red-300 border border-red-500/30"
+                                    }`}>
+                                      {uploadResult.label}
+                                    </span>
+                                  </div>
+                                  <div className="text-sm text-gray-400 mb-3">
+                                    Confidence: {(uploadResult.confidence * 100).toFixed(2)}%
+                                  </div>
+                                  <div className="w-full bg-gray-700 rounded-full h-3">
+                                    <div
+                                      className={`h-3 rounded-full ${
+                                        uploadResult.label.toLowerCase() === "real"
+                                          ? "bg-green-500"
+                                          : "bg-red-500"
+                                      }`}
+                                      style={{
+                                        width: `${uploadResult.confidence * 100}%`,
+                                      }}
+                                    ></div>
+                                  </div>
                                 </div>
-                                <div className="text-sm text-gray-400 mb-3">
-                                  Confidence: {(uploadResult.confidence * 100).toFixed(2)}%
-                                </div>
-                                <div className="w-full bg-gray-700 rounded-full h-3">
-                                  <div
-                                    className={`h-3 rounded-full ${
-                                      uploadResult.label.toLowerCase() === "real"
-                                        ? "bg-green-500"
-                                        : "bg-red-500"
-                                    }`}
-                                    style={{
-                                      width: `${uploadResult.confidence * 100}%`,
-                                    }}
-                                  ></div>
-                                </div>
-                              </div>
 
-                              {/* Detailed Scores */}
-                              {uploadResult.scores && (
-                                <div className="space-y-3">
-                                  <h4 className="text-sm font-semibold text-gray-300">Detailed Scores:</h4>
-                                  {Object.entries(uploadResult.scores).map(([key, score]: [string, any]) => (
-                                    <div key={key} className="flex justify-between items-center">
-                                      <span className="text-sm text-gray-300">{key}</span>
-                                      <div className="flex items-center space-x-2">
-                                        <span className="text-sm text-gray-400">
-                                          {(score * 100).toFixed(2)}%
-                                        </span>
-                                        <div className="w-20 bg-gray-700 rounded-full h-2">
-                                          <div
-                                            className={`h-2 rounded-full ${
-                                              key.toLowerCase() === "real" || key.toLowerCase() === "human"
-                                                ? "bg-green-500"
-                                                : "bg-red-500"
-                                            }`}
-                                            style={{
-                                              width: `${score * 100}%`,
-                                            }}
-                                          ></div>
+                                {/* Detailed Scores */}
+                                {uploadResult.scores && (
+                                  <div className="space-y-3">
+                                    <h4 className="text-sm font-semibold text-gray-300">Detailed Scores:</h4>
+                                    {Object.entries(uploadResult.scores).map(([key, score]: [string, any]) => (
+                                      <div key={key} className="flex justify-between items-center">
+                                        <span className="text-sm text-gray-300">{key}</span>
+                                        <div className="flex items-center space-x-2">
+                                          <span className="text-sm text-gray-400">
+                                            {(score * 100).toFixed(2)}%
+                                          </span>
+                                          <div className="w-20 bg-gray-700 rounded-full h-2">
+                                            <div
+                                              className={`h-2 rounded-full ${
+                                                key.toLowerCase() === "real" || key.toLowerCase() === "human"
+                                                  ? "bg-green-500"
+                                                  : "bg-red-500"
+                                              }`}
+                                              style={{
+                                                width: `${score * 100}%`,
+                                              }}
+                                            ></div>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="p-4 bg-gray-800 rounded-lg">
-                              <p className="text-gray-300 text-sm">
-                                Analysis Result: {JSON.stringify(uploadResult, null, 2)}
-                              </p>
-                            </div>
-                          )}
-                          <button
-                            onClick={resetAnalysis}
-                            className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md w-full"
-                          >
-                            Analyze Another Image
-                          </button>
-                        </div>
-                      )}
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="p-4 bg-gray-800 rounded-lg">
+                                <p className="text-gray-300 text-sm">
+                                  Analysis Result: {JSON.stringify(uploadResult, null, 2)}
+                                </p>
+                              </div>
+                            )}
+                            <button
+                              onClick={resetAnalysis}
+                              className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md w-full"
+                            >
+                              Analyze Another Image
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </section>
         </div>
-
-        {/* Tech Stack Section */}
-        <section id="tech-stack" className="mb-24">
-          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8 backdrop-blur-sm">
-            <h2 className="text-2xl font-bold mb-6">Technologies Used</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {techStack.map((tech, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-700 p-6 hover:border-white transition-colors"
-                >
-                  <div className="flex items-center mb-3">
-                    <Code className="w-5 h-5 mr-3" />
-                    <h3 className="font-bold">{tech.name}</h3>
-                  </div>
-                  <p className="text-gray-400 text-sm">{tech.usage}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Platform Results */}
-        <section className="mb-20">
-          <h2 className="text-2xl font-bold mb-8">Platforms Analysed</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {platforms.map((platform, index) => (
-              <div
-                key={index}
-                className="border border-gray-700 p-6 hover:border-white transition-colors"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold">{platform.name}</h3>
-                  <Globe className="w-5 h-5" />
-                </div>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Verified:</span>
-                    <span>{platform.verified}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Flagged:</span>
-                    <span>{platform.flagged}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 border-t border-gray-800">
-                    <span className="text-gray-400">Accuracy:</span>
-                    <span className="font-bold">{platform.accuracy}%</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Stats Grid */}
-        <section className="mb-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="border border-gray-700 p-6">
-              <div className="text-2xl font-bold mb-1">
-                27
-              </div>
-              <div className="text-gray-400 text-sm">Profiles Processed</div>
-            </div>
-            <div className="border border-gray-700 p-6">
-              <div className="text-2xl font-bold mb-1">76.7%</div>
-              <div className="text-gray-400 text-sm">Overall Accuracy</div>
-            </div>
-            <div className="border border-gray-700 p-6">
-              <div className="text-2xl font-bold mb-1">4</div>
-              <div className="text-gray-400 text-sm">Platforms Supported</div>
-            </div>
-            <div className="border border-gray-700 p-6">
-              <div className="text-2xl font-bold mb-1">{'<'}10s</div>
-              <div className="text-gray-400 text-sm">
-                Average Processing Time
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* How It Works */}
-        <section className="mb-20">
-          <h2 className="text-2xl font-bold mb-8">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="border border-gray-700 p-8 hover:border-white transition-colors">
-              <Search className="w-8 h-8 mb-4" />
-              <h3 className="text-xl font-bold mb-4">Image Analysis</h3>
-              <p className="text-gray-300 mb-4">
-                Uses DeepFace to analyze profile pictures for signs of
-                manipulation or AI generation.
-              </p>
-              <div className="text-sm text-gray-400">
-                <div>• Face detection algorithms</div>
-                <div>• Image metadata analysis</div>
-              </div>
-            </div>
-
-            <div className="border border-gray-700 p-8 hover:border-white transition-colors">
-              <Database className="w-8 h-8 mb-4" />
-              <h3 className="text-xl font-bold mb-4">Data Collection</h3>
-              <p className="text-gray-300 mb-4">
-                Scrapes publicly available information from social media
-                platforms to build a comprehensive profile. Looks for
-                inconsistencies in posting patterns and connections.
-              </p>
-              <div className="text-sm text-gray-400">
-                <div>• Multi-platform data gathering</div>
-                <div>• Activity pattern analysis</div>
-              </div>
-            </div>
-
-            <div className="border border-gray-700 p-8 hover:border-white transition-colors">
-              <Cpu className="w-8 h-8 mb-4" />
-              <h3 className="text-xl font-bold mb-4">Credibility Scoring</h3>
-              <p className="text-gray-300 mb-4">
-                Combines all collected data points using OpenAI and machine
-                learning models to generate a credibility score. Trained on
-                manually verified fake and real profiles.
-              </p>
-              <div className="text-sm text-gray-400">
-                <div>• ML-based scoring algorithm</div>
-                <div>• Behavioral pattern recognition</div>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
-      <footer className="relative px-6 py-8 border-t border-gray-800 mt-20">
+      <footer className="relative px-6 py-4 border-t border-gray-800 mt-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
           <div className="flex items-center space-x-3 mb-4 md:mb-0">
             <Terminal className="w-5 h-5" />
             <span className="font-bold tracking-wider">ISTHISPERSONREAL</span>
           </div>
-          <div className="flex items-center space-x-3 mb-4 md:mb-0">
-          <AudioWaveform  className="w-5 h-5"/>
+          <div className="flex items-center space-x-3">
+            <AudioWaveform className="w-5 h-5"/>
             <span className="font-bold tracking-wider">built by <u><a href="https://github.com/jvalaj">@jvalaj</a></u></span>
           </div>
         </div>
