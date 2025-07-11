@@ -1,9 +1,0 @@
-target/
-!target/*.jar
-!.mvn/wrapper/maven-wrapper.jar
-!target/lib/
-.git
-.gitignore
-README.md
-Dockerfile
-.dockerignore 

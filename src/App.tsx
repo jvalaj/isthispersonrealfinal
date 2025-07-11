@@ -3,23 +3,18 @@ import {
   Terminal,
   Search,
   Database,
-  Users,
   CheckCircle,
-  AlertTriangle,
   Globe,
   Code,
-  Server,
   Cpu,
   Activity,
-  GitBranch,
   Upload,
   Image,
   AudioWaveform ,
   Loader2,
-  Wrench,
 } from "lucide-react";
 import { GRAPHQL_ENDPOINT } from "./config";
-
+import { searchWithGemini } from "./gemini";
 // Add this function at the top (outside App)
 async function analyzeImage(file: File) {
   const formData = new FormData();
@@ -38,11 +33,151 @@ async function analyzeImage(file: File) {
   return result;
 }
 
-interface SearchResult {
-  name: string;
-  source: string;
-  confidence: number;
-}
+// Gemini Loading Animation Component
+const GeminiLoadingAnimation = () => {
+  const [countdown, setCountdown] = useState(5);
+  const [showCountdown, setShowCountdown] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowCountdown(true);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (showCountdown && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showCountdown, countdown]);
+
+  return (
+    <div className="mt-8 text-center">
+      <div className="flex items-center justify-center space-x-2 mb-4">
+        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-100"></div>
+        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-200"></div>
+      </div>
+      
+      {!showCountdown ? (
+        <div className="text-lg font-bold animate-pulse">
+          Is this person <span className="text-blue-400">real</span>?
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <div className="text-sm text-gray-400">
+            You will find out in...
+          </div>
+          <div className="text-3xl font-bold text-blue-400 animate-bounce">
+            {countdown > 0 ? countdown : "🔍"}
+          </div>
+      
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Person Results Card Component
+const PersonResultsCard = ({ result }: { result: string }) => {
+  // Debug: log the raw result
+  console.log('Raw Gemini result:', result);
+  
+  // Parse the result to extract structured information
+  const parseResult = (text: string) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    const parsed: any = {};
+    
+    lines.forEach(line => {
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('- Name:') || trimmedLine.startsWith('Name:')) {
+        parsed.name = trimmedLine.replace(/^-?\s*Name:\s*/, '').trim();
+      } else if (trimmedLine.startsWith('- seemsReal:') || trimmedLine.startsWith('seemsReal:')) {
+        parsed.seemsReal = trimmedLine.replace(/^-?\s*seemsReal:\s*/, '').trim();  
+      } else if (trimmedLine.startsWith('- who is this?:') || trimmedLine.startsWith('who is this?:')) {
+        parsed.whoIsThis = trimmedLine.replace(/^-?\s*who is this\?:\s*/, '').trim();
+      } else if (trimmedLine.startsWith('- Searched:') || trimmedLine.startsWith('Searched:')) {
+        parsed.searched = trimmedLine.replace(/^-?\s*Searched:\s*/, '').trim();
+      }
+    });
+    
+    // If we don't have structured data, treat the whole thing as a summary
+    if (!parsed.name && !parsed.seemsReal && !parsed.whoIsThis && !parsed.searched) {
+      parsed.summary = text;
+    }
+    
+    return parsed;
+  };
+
+  const data = parseResult(result);
+  
+  // Debug: log the parsed data
+  console.log('Parsed data:', data);
+
+  return (
+    <div className="mt-6 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border border-gray-700 rounded-xl p-6 backdrop-blur-sm shadow-xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-grey-900 rounded-full flex items-center justify-center text-white font-bold text-lg">
+            {data.name ? data.name.charAt(0).toUpperCase() : '?'}
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">{data.name || 'Search Results'}</h3>
+           
+          </div>
+        </div>
+        <div className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+          {data.seemsReal || 'analyzing.'}
+        </div>
+      </div>
+
+      {/* Verification Status */}
+      {data.whoIsThis && (
+        <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
+          <div className="flex items-center space-x-2 mb-2">
+            <CheckCircle className="w-4 h-4 text-blue-400" />
+            <h4 className="text-sm font-semibold text-blue-400">who is this?</h4>
+          </div>
+          <p className="text-sm text-gray-300">{data.whoIsThis}</p>
+        </div>
+      )}
+
+      {/* Searched Platforms */}
+      {data.searched && (
+        <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
+          <div className="flex items-center space-x-2 mb-2">
+            <Globe className="w-4 h-4 text-purple-400" />
+            <h4 className="text-sm font-semibold text-purple-400">source</h4>
+          </div>
+          <p className="text-sm text-gray-300">{data.searched}</p>
+        </div>
+      )}
+
+      {/* Display full response if no structured data found */}
+      {data.summary && (
+        <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
+          <div className="flex items-center space-x-2 mb-2">
+            <Activity className="w-4 h-4 text-orange-400" />
+            <h4 className="text-sm font-semibold text-orange-400">Full Response</h4>
+          </div>
+          <div className="text-sm text-gray-300 whitespace-pre-wrap">{data.summary}</div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="mt-4 pt-3 border-t border-gray-700 flex items-center justify-between text-xs text-gray-500">
+      
+      </div>
+    </div>
+  );
+};
+
+
 
 interface Person {
   id: string;
@@ -59,18 +194,19 @@ function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploadResult, setUploadResult] = useState<any>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [searchName, setSearchName] = useState<string>("");
+  const [searchContext, setSearchContext] = useState<string>("");
   const [searchResults, setSearchResults] = useState<Person[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [geminiResult, setGeminiResult] = useState<string | null>(null);
+  const [isGeminiSearching, setIsGeminiSearching] = useState<boolean>(false);
+  const [geminiError, setGeminiError] = useState<string | null>(null);
 
-  // Update handleFileSelect to enable upload
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFile = async (file: File) => {
     if (!file) return;
     setSelectedFile(file);
     setUploadResult(null);
@@ -86,6 +222,14 @@ function App() {
     setIsAnalyzing(false);
   };
 
+  // Update handleFileSelect to enable upload
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       setVerificationCount((prev) => prev + Math.floor(Math.random() * 2) + 1);
@@ -96,9 +240,22 @@ function App() {
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Disabled for feature upgrade
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
   };
 
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      handleFile(file);
+    }
+  };
 
   const createImagePreview = (file: File) => {
     const reader = new FileReader();
@@ -111,20 +268,28 @@ function App() {
 
 
   const resetAnalysis = () => {
-    setSelectedFile(null);
-    setImagePreview(null);
-    setSearchResult(null);
-    setIsAnalyzing(false);
+    if (selectedFile) {
+      setSelectedFile(null);
+      setImagePreview(null);
+      setUploadResult(null);
+      setIsAnalyzing(false);
+      setUploadError(null);
+    }
   };
 
   const searchPerson = async (name: string) => {
     if (!name.trim()) {
       setSearchResults([]);
+      setGeminiResult(null);
       return;
     }
 
+    setSearchResults([]);
+    setGeminiResult(null);
     setIsSearching(true);
     setSearchError(null);
+    setIsGeminiSearching(true);
+    setGeminiError(null);
 
     try {
       const query = `
@@ -156,10 +321,19 @@ function App() {
       const data = await response.json();
       setSearchResults(data.data.searchPerson || []);
     } catch (error) {
-      setSearchError("Failed to search. Please try again.");
-      setSearchResults([]);
+       setSearchResults([]);
     } finally {
       setIsSearching(false);
+    }
+
+    try {
+      const geminiData = await searchWithGemini(name.trim(), searchContext.trim());
+      setGeminiResult(geminiData);
+    } catch (error) {
+      console.error("Gemini search error:", error);
+      setGeminiError(`Failed to get results from Gemini: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsGeminiSearching(false);
     }
   };
 
@@ -222,230 +396,254 @@ function App() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="relative px-6 py-12">
-        <div className="max-w-7xl mx-auto">
-          {/* Hero */}
-          <section className="mb-20">
-            <div className="mb-8">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tight">
-                Is This Person <br />
-                <span className="text-blue-400">Real?</span>
-              </h1>
-              <p className="text-lg text-gray-300 max-w-3xl leading-relaxed">
-                A web application that helps verify if social media profiles are
-                authentic or fake. Uses an ML model to analyze profile
-                pictures, web scraping to gather data across platforms, and
-                machine learning to score credibility.
+      <main className="max-w-7xl mx-auto px-6 py-12">
+        {/* Hero Section */}
+        <section className="text-center mb-24">
+          <div className="relative inline-block">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter relative z-10">
+              Is This Person <br />
+              <span className="text-blue-400 mb-3 ">Real?</span>
+            </h1>
+                  <br />
+            <p className="mt-4 text-xl text-gray-300 relative z-10">
+              Ever wondered if that person you see online is real..
+            </p>
+            <p className="text-gray-400 mt-2 text-xs mx-auto relative z-10">
+              [We search the web for traces of their existence and tell you what we found.]
+              <br />
+            
+            </p>
+          </div>
+        </section>
+
+        <div className="flex flex-col lg:flex-row lg:space-x-8 mb-24">
+          {/* Search Section */}
+          <section id="search" className="w-full lg:w-1/2">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8 backdrop-blur-sm">
+              <div className="flex items-center space-x-3 mb-4">
+                <Search className="w-6 h-6 text-blue-400" />
+                <h2 className="text-2xl font-bold tracking-wider">
+                  Search by Name
+                </h2>
+              </div>
+              <p className="text-gray-400 mb-6">
+                Enter a name to search for public records and social media
+                presence.
               </p>
-            </div>
-
-            {/* Upload Section - ENABLED */}
-            <div className="mb-12">
-              <h2 className="text-xl font-bold mb-4">Upload Profile Image</h2>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Upload Area */}
+              <div className="space-y-4">
+                <div className="flex space-x-4">
+                  <input
+                    type="text"
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    placeholder="Enter a full name..."
+                    className="w-full max-w-md bg-gray-800 border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={() => searchPerson(searchName)}
+                    disabled={isSearching}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md disabled:bg-gray-600 flex items-center flex-shrink-0"
+                  >
+                    {isSearching ? (
+                      <Loader2 className="animate-spin mr-2" />
+                    ) : (
+                      <Search className="mr-2" />
+                    )}
+                    Search
+                  </button>
+                </div>
                 <div>
-                  <div className="border-2 border-dashed border-gray-600 bg-gray-900 rounded-lg p-8 text-center">
-                    <div className="flex flex-col items-center space-y-4">
-                      <Image className="w-12 h-12 text-gray-400" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="mb-4"
-                        disabled={isAnalyzing}
-                      />
-                      {imagePreview && (
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="max-h-40 rounded shadow mb-2"
-                        />
-                      )}
-                      {isAnalyzing && (
-                        <div className="flex items-center space-x-2 text-gray-400">
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Analyzing...</span>
-                        </div>
-                      )}
-                      {uploadError && (
-                        <div className="text-red-400">{uploadError}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Results Area */}
-                <div className="space-y-6">
-                  <div className="border border-gray-700 p-6 rounded-lg">
-                    <h3 className="font-bold mb-3 text-gray-200">
-                      Analysis Results
-                    </h3>
-                    <p className="text-xs text-yellow-400 mb-4">
-                      Disclaimer: This analysis is powered by machine learning
-                      models and may not be 100% accurate. Results should be
-                      interpreted as guidance only and not as definitive proof.
-                      Always use your own judgment and consider additional
-                      information when making decisions.
-                    </p>
-                    <div className="text-gray-300">
-                      {uploadResult ? (
-                        <div className="space-y-4">
-                          {/* Label Badge */}
-                          <div className="flex items-center space-x-2">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-bold
-                              ${
-                                uploadResult.label === "AI"
-                                  ? "bg-red-700 text-white"
-                                  : "bg-green-700 text-white"
-                              }`}
-                            >
-                              {uploadResult.label === "AI"
-                                ? "AI Generated"
-                                : "Real Human"}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              Confidence:{" "}
-                              {(uploadResult.confidence * 100).toFixed(1)}%
-                            </span>
-                          </div>
-                          {/* Scores */}
-                          <div>
-                            <div className="mb-2 text-sm font-semibold">
-                              Scores:
-                            </div>
-                            {uploadResult.scores &&
-                              Object.entries(uploadResult.scores).map(
-                                ([key, value]) => (
-                                  <div key={key} className="mb-2">
-                                    <div className="flex justify-between">
-                                      <span className="capitalize">{key}</span>
-                                      <span>{((value as number) * 100).toFixed(1)}%</span>
-                                    </div>
-                                    <div className="w-full bg-gray-800 rounded h-2 mt-1">
-                                      <div
-                                        className={
-                                          key === uploadResult.label
-                                            ? key === "AI"
-                                              ? "bg-red-600"
-                                              : "bg-green-600"
-                                            : "bg-gray-500"
-                                        }
-                                        style={{
-                                          width: `${(value as number) * 100}%`,
-                                          height: "100%",
-                                          borderRadius: "0.25rem",
-                                        }}
-                                      ></div>
-                                    </div>
-                                  </div>
-                                )
-                              )}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">
-                          {isAnalyzing
-                            ? "Analyzing image..."
-                            : "Upload an image to see results here."}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <input
+                    type="text"
+                    value={searchContext}
+                    onChange={(e) => setSearchContext(e.target.value)}
+                    placeholder="Why are you looking for this person? (optional context)"
+                    className="w-full bg-gray-800 border border-gray-700 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
                 </div>
               </div>
-            </div>
-          </section>
 
-          {/* Name Search Section */}
-          <div className="mb-12 w-full">
-            <h2 className="text-xl font-bold mb-4">Enter Full Name</h2>
-            <div className="border border-gray-700 bg-gray-900 rounded-lg p-8">
-              <div className="flex gap-4 mb-4">
-                <input
-                  type="text"
-                  placeholder="Enter a name to search..."
-                  value={searchName}
-                  onChange={(e) => setSearchName(e.target.value)}
-                  className="flex-1 px-4 py-2 rounded bg-black border border-gray-700 text-white focus:outline-none focus:border-blue-400"
-                />
-                <button
-                  onClick={() => searchPerson(searchName)}
-                  disabled={isSearching || !searchName.trim()}
-                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isSearching ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Searching...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4" />
-                      Search
-                    </>
-                  )}
-                </button>
-              </div>
-              
               {searchError && (
-                <div className="text-red-400 mb-4">{searchError}</div>
+                <p className="text-red-400 mt-4">{searchError}</p>
               )}
-              
-              {searchResults.length > 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-200">Search Results ({searchResults.length})</h3>
-                  <div className="grid gap-4">
-                    {searchResults.map((person) => (
-                      <div key={person.id} className="border border-gray-600 p-4 rounded">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-bold text-white">{person.name}</h4>
-                            <p className="text-gray-400 text-sm">{person.platform}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
+
+              {/* Fixed height container for search results */}
+              <div className="mt-6 min-h-[400px] max-h-[400px] overflow-y-auto">
+                {searchResults.length > 0 && (
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">Search Results</h3>
+                    <div className="space-y-3">
+                      {searchResults.map((person) => (
+                        <div
+                          key={person.id}
+                          className="bg-gray-800/50 p-4 rounded-lg border border-gray-700"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-bold">{person.name}</span>
                             <span
-                              className={`px-2 py-1 rounded text-xs font-bold ${
+                              className={`px-2 py-1 text-xs rounded-full ${
                                 person.isVerified
-                                  ? "bg-green-700 text-white"
-                                  : "bg-red-700 text-white"
+                                  ? "bg-green-500/20 text-green-300"
+                                  : "bg-yellow-500/20 text-yellow-300"
                               }`}
                             >
                               {person.isVerified ? "Verified" : "Unverified"}
                             </span>
-                            <span className="text-xs text-gray-400">
-                              {(person.confidence * 100).toFixed(1)}%
-                            </span>
                           </div>
+                          <p className="text-sm text-gray-400 mb-2">
+                            {person.platform}
+                          </p>
+                          {person.profileUrl && (
+                            <a
+                              href={person.profileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:underline text-sm block mb-2"
+                            >
+                              View Profile
+                            </a>
+                          )}
+                          <p className="text-sm">
+                            Confidence: {person.confidence.toFixed(2)}%
+                          </p>
+                          {person.lastSeen && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Last seen: {person.lastSeen}
+                            </p>
+                          )}
                         </div>
-                        {person.profileUrl && (
-                          <a
-                            href={person.profileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:text-blue-300 text-sm"
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {isGeminiSearching && (
+                  <GeminiLoadingAnimation />
+                )}
+
+                {geminiError && (
+                  <p className="text-red-400 mt-4">{geminiError}</p>
+                )}
+
+                {geminiResult && (
+                  <PersonResultsCard result={geminiResult} />
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Image Analysis Section */}
+          <section id="image-analysis" className="w-full lg:w-1/2 mt-8 lg:mt-0">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8 backdrop-blur-sm">
+              <div className="flex items-center space-x-3 mb-4">
+                <Image className="w-6 h-6 text-purple-400" />
+                <h2 className="text-2xl font-bold tracking-wider">
+                  Analyze by Image
+                </h2>
+              </div>
+              <p className="text-gray-400 mb-6">
+                Upload an image to detect if it was generated by AI.
+              </p>
+
+              <div
+                className={`relative border-2 border-dashed border-gray-600 rounded-lg p-10 text-center cursor-pointer hover:border-purple-400 transition-colors ${
+                  dragActive ? "border-purple-400 bg-gray-800/50" : ""
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                <input
+                  type="file"
+                  id="file-upload"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={handleFileSelect}
+                  accept="image/*"
+                />
+                <Upload className="w-8 h-8 mx-auto mb-4 text-gray-500" />
+                <label htmlFor="file-upload" className="text-purple-400">
+                  Drag & drop or <u>click to upload</u>
+                </label>
+                <p className="text-xs text-gray-500 mt-2">
+                  PNG, JPG, GIF up to 10MB
+                </p>
+              </div>
+
+              {isAnalyzing && (
+                <div className="mt-8 text-center">
+                  <Loader2 className="animate-spin inline-block w-8 h-8" />
+                  <p>Analyzing image...</p>
+                </div>
+              )}
+
+              {uploadError && (
+                <p className="text-red-400 mt-4">{uploadError}</p>
+              )}
+
+              {imagePreview && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
+                  <div className="space-y-4">
+                    <div className="w-full">
+                      <img
+                        src={imagePreview}
+                        alt="Uploaded preview"
+                        className="rounded-lg max-h-60 w-full object-cover"
+                      />
+                    </div>
+                    <div className="w-full">
+                      {uploadResult && (
+                        <div className="space-y-4">
+                          {uploadResult.map(
+                            (
+                              item: { label: string; score: number },
+                              index: number
+                            ) => (
+                              <div key={index}>
+                                <div className="flex justify-between mb-1">
+                                  <span className="text-base font-medium text-gray-300">
+                                    {item.label}
+                                  </span>
+                                  <span className="text-sm font-medium text-gray-400">
+                                    {(item.score * 100).toFixed(2)}%
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-700 rounded-full h-2.5">
+                                  <div
+                                    className={`h-2.5 rounded-full ${
+                                      item.label === "real"
+                                        ? "bg-green-500"
+                                        : "bg-red-500"
+                                    }`}
+                                    style={{
+                                      width: `${item.score * 100}%`,
+                                    }}
+                                  ></div>
+                                </div>
+                              </div>
+                            )
+                          )}
+                          <button
+                            onClick={resetAnalysis}
+                            className="mt-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md w-full"
                           >
-                            View Profile →
-                          </a>
-                        )}
-                      </div>
-                    ))}
+                            Analyze Another Image
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
-              
-              <p className="text-gray-500 text-sm mt-4">
-                Search for a person's name to find their profiles across social media platforms.
-                Results show verification status and confidence scores.
-              </p>
             </div>
-          </div>
+          </section>
+        </div>
 
-          {/* Tech Stack */}
-          <section className="mb-20">
-            <h2 className="text-2xl font-bold mb-8">Technologies Used</h2>
+        {/* Tech Stack Section */}
+        <section id="tech-stack" className="mb-24">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-8 backdrop-blur-sm">
+            <h2 className="text-2xl font-bold mb-6">Technologies Used</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {techStack.map((tech, index) => (
                 <div
@@ -460,113 +658,113 @@ function App() {
                 </div>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Platform Results */}
-          <section className="mb-20">
-            <h2 className="text-2xl font-bold mb-8">Platforms Analysed</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {platforms.map((platform, index) => (
-                <div
-                  key={index}
-                  className="border border-gray-700 p-6 hover:border-white transition-colors"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold">{platform.name}</h3>
-                    <Globe className="w-5 h-5" />
+        {/* Platform Results */}
+        <section className="mb-20">
+          <h2 className="text-2xl font-bold mb-8">Platforms Analysed</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {platforms.map((platform, index) => (
+              <div
+                key={index}
+                className="border border-gray-700 p-6 hover:border-white transition-colors"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold">{platform.name}</h3>
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Verified:</span>
+                    <span>{platform.verified}</span>
                   </div>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Verified:</span>
-                      <span>{platform.verified}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Flagged:</span>
-                      <span>{platform.flagged}</span>
-                    </div>
-                    <div className="flex justify-between pt-2 border-t border-gray-800">
-                      <span className="text-gray-400">Accuracy:</span>
-                      <span className="font-bold">{platform.accuracy}%</span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Flagged:</span>
+                    <span>{platform.flagged}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t border-gray-800">
+                    <span className="text-gray-400">Accuracy:</span>
+                    <span className="font-bold">{platform.accuracy}%</span>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Stats Grid */}
+        <section className="mb-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="border border-gray-700 p-6">
+              <div className="text-2xl font-bold mb-1">
+                27
+              </div>
+              <div className="text-gray-400 text-sm">Profiles Processed</div>
             </div>
-          </section>
-
-          {/* Stats Grid */}
-          <section className="mb-20">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="border border-gray-700 p-6">
-                <div className="text-2xl font-bold mb-1">
-                  27
-                </div>
-                <div className="text-gray-400 text-sm">Profiles Processed</div>
-              </div>
-              <div className="border border-gray-700 p-6">
-                <div className="text-2xl font-bold mb-1">76.7%</div>
-                <div className="text-gray-400 text-sm">Overall Accuracy</div>
-              </div>
-              <div className="border border-gray-700 p-6">
-                <div className="text-2xl font-bold mb-1">4</div>
-                <div className="text-gray-400 text-sm">Platforms Supported</div>
-              </div>
-              <div className="border border-gray-700 p-6">
-                <div className="text-2xl font-bold mb-1">{'<'}10s</div>
-                <div className="text-gray-400 text-sm">
-                  Average Processing Time
-                </div>
-              </div>
+            <div className="border border-gray-700 p-6">
+              <div className="text-2xl font-bold mb-1">76.7%</div>
+              <div className="text-gray-400 text-sm">Overall Accuracy</div>
             </div>
-          </section>
-
-          {/* How It Works */}
-          <section className="mb-20">
-            <h2 className="text-2xl font-bold mb-8">How It Works</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="border border-gray-700 p-8 hover:border-white transition-colors">
-                <Search className="w-8 h-8 mb-4" />
-                <h3 className="text-xl font-bold mb-4">Image Analysis</h3>
-                <p className="text-gray-300 mb-4">
-                  Uses DeepFace to analyze profile pictures for signs of
-                  manipulation or AI generation.
-                </p>
-                <div className="text-sm text-gray-400">
-                  <div>• Face detection algorithms</div>
-                  <div>• Image metadata analysis</div>
-                </div>
-              </div>
-
-              <div className="border border-gray-700 p-8 hover:border-white transition-colors">
-                <Database className="w-8 h-8 mb-4" />
-                <h3 className="text-xl font-bold mb-4">Data Collection</h3>
-                <p className="text-gray-300 mb-4">
-                  Scrapes publicly available information from social media
-                  platforms to build a comprehensive profile. Looks for
-                  inconsistencies in posting patterns and connections.
-                </p>
-                <div className="text-sm text-gray-400">
-                  <div>• Multi-platform data gathering</div>
-                  <div>• Activity pattern analysis</div>
-                </div>
-              </div>
-
-              <div className="border border-gray-700 p-8 hover:border-white transition-colors">
-                <Cpu className="w-8 h-8 mb-4" />
-                <h3 className="text-xl font-bold mb-4">Credibility Scoring</h3>
-                <p className="text-gray-300 mb-4">
-                  Combines all collected data points using OpenAI and machine
-                  learning models to generate a credibility score. Trained on
-                  manually verified fake and real profiles.
-                </p>
-                <div className="text-sm text-gray-400">
-                  <div>• ML-based scoring algorithm</div>
-                  <div>• Behavioral pattern recognition</div>
-                </div>
+            <div className="border border-gray-700 p-6">
+              <div className="text-2xl font-bold mb-1">4</div>
+              <div className="text-gray-400 text-sm">Platforms Supported</div>
+            </div>
+            <div className="border border-gray-700 p-6">
+              <div className="text-2xl font-bold mb-1">{'<'}10s</div>
+              <div className="text-gray-400 text-sm">
+                Average Processing Time
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="mb-20">
+          <h2 className="text-2xl font-bold mb-8">How It Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="border border-gray-700 p-8 hover:border-white transition-colors">
+              <Search className="w-8 h-8 mb-4" />
+              <h3 className="text-xl font-bold mb-4">Image Analysis</h3>
+              <p className="text-gray-300 mb-4">
+                Uses DeepFace to analyze profile pictures for signs of
+                manipulation or AI generation.
+              </p>
+              <div className="text-sm text-gray-400">
+                <div>• Face detection algorithms</div>
+                <div>• Image metadata analysis</div>
+              </div>
+            </div>
+
+            <div className="border border-gray-700 p-8 hover:border-white transition-colors">
+              <Database className="w-8 h-8 mb-4" />
+              <h3 className="text-xl font-bold mb-4">Data Collection</h3>
+              <p className="text-gray-300 mb-4">
+                Scrapes publicly available information from social media
+                platforms to build a comprehensive profile. Looks for
+                inconsistencies in posting patterns and connections.
+              </p>
+              <div className="text-sm text-gray-400">
+                <div>• Multi-platform data gathering</div>
+                <div>• Activity pattern analysis</div>
+              </div>
+            </div>
+
+            <div className="border border-gray-700 p-8 hover:border-white transition-colors">
+              <Cpu className="w-8 h-8 mb-4" />
+              <h3 className="text-xl font-bold mb-4">Credibility Scoring</h3>
+              <p className="text-gray-300 mb-4">
+                Combines all collected data points using OpenAI and machine
+                learning models to generate a credibility score. Trained on
+                manually verified fake and real profiles.
+              </p>
+              <div className="text-sm text-gray-400">
+                <div>• ML-based scoring algorithm</div>
+                <div>• Behavioral pattern recognition</div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
