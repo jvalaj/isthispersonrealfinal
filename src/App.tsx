@@ -10,7 +10,6 @@ import {
   AudioWaveform,
   Loader2,
 } from "lucide-react";
-import { GRAPHQL_ENDPOINT } from "./config";
 import { searchWithGemini } from "./gemini";
 // Add this function at the top (outside App)
 async function analyzeImage(file: File) {
@@ -298,40 +297,7 @@ function App() {
     setIsGeminiSearching(true);
     setGeminiError(null);
 
-    try {
-      const query = `
-        query {
-          searchPerson(name: "${name.trim()}") {
-            id
-            name
-            platform
-            profileUrl
-            confidence
-            isVerified
-            lastSeen
-          }
-        }
-      `;
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to search");
-      }
-
-      const data = await response.json();
-      setSearchResults(data.data.searchPerson || []);
-    } catch (error) {
-       setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
 
     try {
       const geminiData = await searchWithGemini(name.trim(), searchContext.trim());
@@ -380,7 +346,7 @@ function App() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-6 flex-grow flex flex-col">
+      <main className="max-w-7xl  mx-auto px-6 py-6 flex-grow flex flex-col">
         {/* Hero Section - reducing size to fit screen better */}
         <section className="text-center mb-8">
           <div className="relative inline-block">
@@ -400,7 +366,7 @@ function App() {
         <div className="flex flex-col lg:flex-row lg:space-x-8 flex-grow">
           {/* Search Section */}
           <section id="search" className="w-full lg:w-1/2 flex flex-col">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 backdrop-blur-sm flex-grow flex flex-col h-full">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 backdrop-blur-sm flex flex-col h-auto">
               <div className="flex items-center space-x-3 mb-3">
                 <Search className="w-6 h-6 text-blue-400" />
                 <h2 className="text-xl font-bold tracking-wider">
@@ -451,7 +417,7 @@ function App() {
               )}
 
               {/* Fixed height scrollable container for search results */}
-              <div className="mt-4 flex-grow overflow-y-auto min-h-[400px]">
+              <div className="mt-4 flex-grow overflow-y-auto max-h-[400px]">
                 {searchResults.length > 0 && (
                   <div>
                     <h3 className="text-xl font-bold mb-4">Search Results</h3>
@@ -517,7 +483,7 @@ function App() {
 
           {/* Image Analysis Section */}
           <section id="image-analysis" className="w-full lg:w-1/2 mt-6 lg:mt-0 flex flex-col">
-            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 backdrop-blur-sm flex-grow flex flex-col h-full">
+            <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6 backdrop-blur-sm flex flex-col h-auto">
               <div className="flex items-center space-x-3 mb-3">
                 <Image className="w-6 h-6 text-purple-400" />
                 <h2 className="text-xl font-bold tracking-wider">
@@ -566,7 +532,7 @@ function App() {
               )}
 
               {/* Fixed height scrollable container for image results */}
-              <div className={`flex-grow overflow-y-auto ${imagePreview ? 'mt-4' : 'mt-0'}`}>
+              <div className={`flex-grow overflow-y-auto  ${imagePreview ? 'mt-4' : 'mt-0'}`}>
                 {imagePreview && (
                   <div>
                     <h3 className="text-xl font-bold mb-3">Analysis Result</h3>

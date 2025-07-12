@@ -12,24 +12,3 @@ body {
 html, body {
   height: 100%;
 }
-
-/* Ensure equal heights for search and image analysis sections */
-@media (min-width: 1024px) {
-  #search, #image-analysis {
-    min-height: 750px;
-    max-height: calc(100vh - 300px);
-    display: flex;
-  }
-  
-  #search > div, #image-analysis > div {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-
-  /* Ensure scrollable content areas */
-  .overflow-y-auto {
-    min-height: 200px;
-    max-height: calc(100% - 150px);
-  }
-}
