@@ -5,7 +5,7 @@ const API_KEY = import.meta.env.VITE_GEMINI_API_KEY as string;
 if (!API_KEY) {
   throw new Error("VITE_GEMINI_API_KEY is not set in .env file");
 }
-
+//wdwd
 // Configure the client
 const ai = new GoogleGenAI({
   apiKey: API_KEY,
