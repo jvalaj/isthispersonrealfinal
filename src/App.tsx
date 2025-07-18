@@ -329,51 +329,6 @@ function App() {
     setGeminiError(null);
 
     try {
-      const response = await fetch('https://api.example.com/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer YOUR_API_KEY',
-        },
-        body: JSON.stringify({
-          query: `
-            query {
-              searchPerson(name: "${name.trim()}", context: "${searchContext.trim()}") {
-                id
-                name
-                platform
-                profileUrl
-                confidence
-                isVerified
-                lastSeen
-              }
-            }
-          `,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const json = await response.json();
-      const personData = json.data?.searchPerson;
-
-      if (Array.isArray(personData)) {
-        setSearchResults(personData);
-      } else {
-        setSearchResults([]);
-      }
-    } finally {
-      setIsSearching(false);
-      // stop cycling messages
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    }
-
-    try {
       const geminiData = await searchWithGemini(name.trim(), searchContext.trim());
       setGeminiResult(geminiData);
       setSearchError(null);
@@ -381,7 +336,13 @@ function App() {
       console.error("Gemini search error:", error);
       setGeminiError(`Failed to get results from Gemini: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
+      setIsSearching(false);
       setIsGeminiSearching(false);
+      // stop cycling messages
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
   };
 
