@@ -13,7 +13,7 @@ const ai = new GoogleGenAI({
 
 // Define the grounding tool
 const groundingTool = {
-  googleSearch: {},
+  googleSearch: {}, 
 };
 
 // Configure generation settings
@@ -39,6 +39,7 @@ Format your response as:
 - seemsReal: [real if there is consistent, credible information about the person, might not be real if not found on more than 2-3 sites,definitely not real otherwise]
 - who is this?: [Add descriptive tags like "cuber, boxer, student, foodie, startup bro" or just "unknown", e.g., description like "software engineer", "marketing guru", "cat lover",]
 - Searched: [List specific sites/platforms where you found info, or say "Not found anywhere"]
+- realnessExplanation: [A brief explanation summarizing why the person appears real or not]
 
 Be precise. Avoid boring disclaimers. Don’t explain how you did the search — just drop the facts (and jokes where appropriate). If you can’t find anything credible, say so clearly and don’t make stuff up.
 `;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Terminal,
   Search,
@@ -95,6 +95,8 @@ const PersonResultsCard = ({ result }: { result: string }) => {
         parsed.whoIsThis = trimmedLine.replace(/^-?\s*who is this\?:\s*/, '').trim();
       } else if (trimmedLine.startsWith('- Searched:') || trimmedLine.startsWith('Searched:')) {
         parsed.searched = trimmedLine.replace(/^-?\s*Searched:\s*/, '').trim();
+      } else if (trimmedLine.startsWith('- realnessExplanation:') || trimmedLine.startsWith('realnessExplanation:')) {
+        parsed.realnessExplanation = trimmedLine.replace(/^-?\s*realnessExplanation:\s*/, '').trim();
       }
     });
     
@@ -148,6 +150,17 @@ const PersonResultsCard = ({ result }: { result: string }) => {
         </div>
       )}
 
+      {/* Realness Explanation */}
+      {data.realnessExplanation && (
+        <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
+          <div className="flex items-center space-x-2 mb-2">
+            <Activity className="w-4 h-4 text-green-400" />
+            <h4 className="text-sm font-semibold text-green-400">Realness Details</h4>
+          </div>
+          <p className="text-sm text-gray-300">{data.realnessExplanation}</p>
+        </div>
+      )}
+
       {/* Display full response if no structured data found */}
       {data.summary && (
         <div className="mb-4 p-3 bg-gray-800/50 rounded-lg border border-gray-600">
@@ -194,6 +207,15 @@ function App() {
   const [geminiResult, setGeminiResult] = useState<string | null>(null);
   const [isGeminiSearching, setIsGeminiSearching] = useState<boolean>(false);
   const [geminiError, setGeminiError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+  const searchMessages = [
+    'Finding the person...',
+    'Scraping sites...',
+    'Analyzing multiple sites...',
+    'Deciding if person is real...'
+  ];
+  const [searchMessageIndex, setSearchMessageIndex] = useState<number>(0);
+  const intervalRef = useRef<number | null>(null);
 
   const handleFile = async (file: File) => {
     if (!file) return;
@@ -217,8 +239,7 @@ function App() {
     
     try {
       const data = await analyzeImage(file);
-      console.log('Hugging Face API Response:', data); // Debug log
-      setUploadResult(data);
+       setUploadResult(data);
     } catch (err) {
       console.error('Image analysis error:', err); // Debug log
       setUploadError("Failed to analyze image. Please try again.");
@@ -286,10 +307,20 @@ function App() {
   const searchPerson = async (name: string) => {
     if (!name.trim()) {
       setSearchResults([]);
+      setHasSearched(false);
       setGeminiResult(null);
+      setSearchError(null);
       return;
     }
 
+    // start cycling messages
+    setSearchMessageIndex(0);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = window.setInterval(() => {
+      setSearchMessageIndex(i => (i + 1) % searchMessages.length);
+    }, 1000);
+
+    setHasSearched(true);
     setSearchResults([]);
     setGeminiResult(null);
     setIsSearching(true);
@@ -297,11 +328,55 @@ function App() {
     setIsGeminiSearching(true);
     setGeminiError(null);
 
+    try {
+      const response = await fetch('https://api.example.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer YOUR_API_KEY',
+        },
+        body: JSON.stringify({
+          query: `
+            query {
+              searchPerson(name: "${name.trim()}", context: "${searchContext.trim()}") {
+                id
+                name
+                platform
+                profileUrl
+                confidence
+                isVerified
+                lastSeen
+              }
+            }
+          `,
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const json = await response.json();
+      const personData = json.data?.searchPerson;
+
+      if (Array.isArray(personData)) {
+        setSearchResults(personData);
+      } else {
+        setSearchResults([]);
+      }
+    } finally {
+      setIsSearching(false);
+      // stop cycling messages
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
 
     try {
       const geminiData = await searchWithGemini(name.trim(), searchContext.trim());
       setGeminiResult(geminiData);
+      setSearchError(null);
     } catch (error) {
       console.error("Gemini search error:", error);
       setGeminiError(`Failed to get results from Gemini: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -393,11 +468,16 @@ function App() {
                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md disabled:bg-gray-600 flex items-center flex-shrink-0"
                   >
                     {isSearching ? (
-                      <Loader2 className="animate-spin mr-2" />
+                      <>
+                        <Loader2 className="animate-spin mr-2" />
+                        {searchMessages[searchMessageIndex]}
+                      </>
                     ) : (
-                      <Search className="mr-2" />
+                      <>
+                        <Search className="mr-2" />
+                        {hasSearched ? 'Search again' : 'Search'}
+                      </>
                     )}
-                    Search
                   </button>
                 </div>
                 <div>
