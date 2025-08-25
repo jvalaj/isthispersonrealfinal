@@ -375,10 +375,7 @@ function App() {
               ISTHISPERSONREAL
             </span>
           </div>
-          <div className="flex items-center space-x-2">
-            <AudioWaveform className="w-4 h-4"/>
-            <span className="font-bold tracking-wider text-sm">built by <u><a href="https://github.com/jvalaj">@jvalaj</a></u></span>
-          </div>
+         
         </div>
       </header>
 
@@ -679,9 +676,7 @@ function App() {
       <footer className="relative px-6 py-4 border-t border-gray-800 mt-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between">
           <div className="flex items-center space-x-3 mb-4 md:mb-0">
-            <Terminal className="w-5 h-5" />
-            <span className="font-bold tracking-wider">ISTHISPERSONREAL</span>
-          </div>
+            </div>
           <div className="flex items-center space-x-3">
             <AudioWaveform className="w-5 h-5"/>
             <span className="font-bold tracking-wider">built by <u><a href="https://github.com/jvalaj">@jvalaj</a></u></span>
